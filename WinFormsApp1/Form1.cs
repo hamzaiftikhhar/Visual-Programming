@@ -1,5 +1,6 @@
 namespace WinFormsApp1;
 using System.Drawing.Imaging;
+using System.Windows.Forms;
 
 public partial class Form1 : Form
 {
@@ -231,86 +232,76 @@ public partial class Form1 : Form
     private void button9_Click(object sender, EventArgs e)
     {
         Bitmap bmp = new Bitmap(pictureBox1.Image);
+        //empty bitmap for sketch
         Bitmap bmp2 = new Bitmap(bmp.Width, bmp.Height);
         BitmapData data = bmp.LockBits(
-            new Rectangle(0, 0, bmp.Width, bmp.Height)
-            , ImageLockMode.ReadWrite
-            , PixelFormat.Format24bppRgb
-            );//Lock the bits of the image to make it editable 
+            new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite,
+            PixelFormat.Format24bppRgb
+            );
+        //empty data2 for sketch
         BitmapData data2 = bmp2.LockBits(
-           new Rectangle(0, 0, bmp2.Width, bmp2.Height)
-           , ImageLockMode.ReadWrite
-           , PixelFormat.Format24bppRgb
-           );//Lock the bits of the image to make it editable
-
+           new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite,
+           PixelFormat.Format24bppRgb
+           );
         System.IntPtr s = data.Scan0;
-        //sytem pointer pointing to an empty bitmap
+        //system pointer pointing to empty bitmap
         System.IntPtr s2 = data2.Scan0;
-
         int mw = data.Stride;
+        //built in variable for 3 times width of image
         unsafe
         {
             byte* p = (byte*)s;
-            //sytem pointer pointing to an empty bitmap
+            //byte pointer pointing to empty bitmap
             byte* p2 = (byte*)s2;
-
-            for (int i = 0; i < bmp.Width; i++)
+            for (int i = 1; i < bmp.Width - 1; i++)
             {
-                for (int j = 0; j < bmp.Height; j++)
+                for (int j = 1; j < bmp.Height - 1; j++)
                 {
-                    int total = Math.Abs(p[0] - p[3 + mw]) + Math.Abs(p[1] - p[4 + mw]) + Math.Abs(p[2] - p[5 + mw]);
+                    int total = Math.Abs(p[0] - p[3 + mw]) +
+                         Math.Abs(p[1] - p[4 + mw]) +
+                         Math.Abs(p[2] - p[5 + mw]);
                     if (total > 120)
                     {
-                        p2[3 + mw] = p2[4 + mw] = p2[5 + mw] = 255;//To make the bg white because it is black by default
+                        p2[3 + mw] = p2[4 + mw] = p2[5 + mw] = 255;
                     }
                     p += 3;
                     p2 += 3;
-
                 }
             }
             bmp.UnlockBits(data);
             bmp2.UnlockBits(data2);
-
             pictureBox1.Image = bmp2;
-
         }
+    
     }
 
     private void button10_Click(object sender, EventArgs e)
     {
-
         Bitmap bmp = new Bitmap(pictureBox1.Image);
-        Bitmap bmp2 = new Bitmap(bmp.Width, bmp.Height);
         BitmapData data = bmp.LockBits(
             new Rectangle(0, 0, bmp.Width, bmp.Height)
             , ImageLockMode.ReadWrite
             , PixelFormat.Format24bppRgb
-            );//Lock the bits of the image to make it editable 
-        BitmapData data2 = bmp2.LockBits(
-           new Rectangle(0, 0, bmp2.Width, bmp2.Height)
-           , ImageLockMode.ReadWrite
-           , PixelFormat.Format24bppRgb
-           );//Lock the bits of the image to make it editable
-
+            );
         System.IntPtr s = data.Scan0;
-        //sytem pointer pointing to an empty bitmap
-        System.IntPtr s2 = data2.Scan0;
-
-        int mw = data.Stride;
-        for (int i = 0; i < bmp.Width; i++)
+        unsafe
         {
-            for (int j = 0; j < bmp.Height; j++)
+            byte* p = (byte*)s;
+            for (int i = 0; i < bmp.Width; i++)
             {
-                Color color = bmp.GetPixel(i, j);
-                int red = 255 - color.R;
-                int green = 255 - color.G;
-                int blue = 255 - color.B;
-                bmp.SetPixel(i, j, Color.FromArgb(red, green, blue));
-
-
-
+                for (int j = 0; j < bmp.Height; j++)
+                {
+                    int blue = 255 - p[0];
+                    int green = 255 - p[1];
+                    int red = 255 - p[2];
+                    p[0] = (byte)blue;
+                    p[1] = (byte)green;
+                    p[2] = (byte)red;
+                    p += 3;
+                }
             }
+            bmp.UnlockBits(data);
+            pictureBox1.Image = bmp;
         }
-        pictureBox1.Image = bmp;
     }
 }
